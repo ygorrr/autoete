@@ -14,7 +14,7 @@ void setup() {
 void loop() {
   // 1. Envia comando para solicitar temperatura
   Wire.beginTransmission(SLAVE_ADDRESS);
-  Wire.write("TEMP?");        // Comando para solicitar temperatura
+  Wire.write("0");        // Comando para solicitar temperatura
   Wire.endTransmission();
   
   Serial.println("Solicitando temperatura do escravo...");
