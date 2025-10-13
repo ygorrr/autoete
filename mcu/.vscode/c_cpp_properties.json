@@ -10,11 +10,13 @@
             "includePath": [
                 "D:/projetos/autoete/mcu/include",
                 "D:/projetos/autoete/mcu/src",
+                "D:/projetos/autoete/mcu/.pio/libdeps/mqtt-client/PubSubClient/src",
+                "D:/projetos/autoete/mcu/.pio/libdeps/mqtt-client/Ethernet/src",
+                "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/cores/arduino",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/variants/standard",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/HID/src",
-                "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
                 "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
                 ""
@@ -24,11 +26,13 @@
                 "path": [
                     "D:/projetos/autoete/mcu/include",
                     "D:/projetos/autoete/mcu/src",
+                    "D:/projetos/autoete/mcu/.pio/libdeps/mqtt-client/PubSubClient/src",
+                    "D:/projetos/autoete/mcu/.pio/libdeps/mqtt-client/Ethernet/src",
+                    "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/cores/arduino",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/variants/standard",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/HID/src",
-                    "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
                     "C:/Users/Ygor/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
                     ""
