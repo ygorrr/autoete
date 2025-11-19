@@ -23,3 +23,25 @@ ou utilizar o botão de ambiente adicionado pela extensão do PlatformIO:
 - Na barra inferior do VSCode, clique em `Switch PlatformIO Project Environment`.
 
 <img src="https://raw.githubusercontent.com/ygorrr/ygorrr.github.io/main/doc-images/pio-env-bar.png" width="500" title="PlatformIO environment bar">
+
+# MQTT
+
+Esse projeto utiliza o broker MQTT Eclipse Mosquitto. Documentação dos utilitários de CLI podem ser encontrados em [https://mosquitto.org/documentation/](https://mosquitto.org/documentation/)
+
+```bash
+-p		# Especifica porta para conexão com o broker
+--port
+```
+
+```bash
+-h		# Especifica o endereço IP do host do broker
+--host
+```
+
+```bash
+-t		# Especifica o tópico atrelado à mensagem. Recebe strings em aspas duplas.
+```
+
+```bash
+-m		# Especifica o conteúdo da mensagem. Recebe strings em aspas duplas.
+```
