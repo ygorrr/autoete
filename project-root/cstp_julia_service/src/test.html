@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Test POST /control/do_pi</h2>
+
+<button onclick="send()">Send Test Request</button>
+
+<pre id="output"></pre>
+
+<script>
+function send() {
+  fetch("http://localhost:8001/control/do_pi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      plant_id: "CSTP-01",
+      timestamp: "2025-11-15T12:00:00Z",
+      measurements: { DO: 1.8 },
+      setpoints: { DO: 2.0 }
+    })
+  })
+  .then(res => res.text())
+  .then(txt => document.getElementById("output").innerText = txt)
+  .catch(err => alert(err));
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>C-STP Mini SCADA Dashboard</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    header {
+      background: #111827;
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #9ca3af;
+    }
+    .status-dot.ok {
+      background: #10b981;
+    }
+    .status-dot.bad {
+      background: #ef4444;
+    }
+    main {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+      padding: 16px;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 6px;
+    }
+    .field {
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 2px;
+      color: #4b5563;
+    }
+    .field input[type="text"],
+    .field input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+    }
+    .field input[type="range"] {
+      width: 100%;
+    }
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+    button.secondary {
+      background: white;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      color: #4b5563;
+    }
+    .badge.ok {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+      color: #15803d;
+    }
+    .badge.bad {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+    }
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    pre {
+      background: #0b1120;
+      color: #e5e7eb;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      max-height: 200px;
+    }
+    .chart-container {
+      margin-top: 8px;
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    canvas {
+      width: 100%;
+      max-width: 600px;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>C-STP Mini SCADA Dashboard</h1>
+  <div class="status-indicator">
+    <span id="health-dot" class="status-dot"></span>
+    <span id="health-text">Checking...</span>
+  </div>
+</header>
+
+<main>
+  <!-- Left: Inputs / Controls -->
+  <section class="card">
+    <h2>Control Panel</h2>
+
+    <div class="field">
+      <label for="plant-id">Plant ID</label>
+      <input id="plant-id" type="text" value="CSTP-01" />
+    </div>
+
+    <div class="field">
+      <label for="do-meas">
+        Measured DO [mg/L]
+        <span class="small" id="do-meas-val"></span>
+      </label>
+      <input id="do-meas" type="range" min="0" max="5" step="0.1" value="1.8" />
+    </div>
+
+    <div class="field">
+      <label for="do-sp">DO Setpoint [mg/L]</label>
+      <input id="do-sp" type="number" min="0" max="5" step="0.1" value="2.0" />
+    </div>
+
+    <div class="field">
+      <label class="flex-row">
+        <input id="auto-send" type="checkbox" />
+        <span>Auto-send every 5 seconds (simulated measurement)</span>
+      </label>
+    </div>
+
+    <div class="field flex-row">
+      <button id="btn-send">Send Measurement Now</button>
+      <button id="btn-rand" class="secondary">Randomize DO</button>
+    </div>
+
+    <div class="field small">
+      <strong>Note:</strong> This UI is a “SCADA-style” simulator.  
+      The DO value here is a simulated measurement sent to `/control/do_pi`.
+    </div>
+  </section>
+
+  <!-- Right: Output / History / Chart / Raw -->
+  <section class="card">
+    <h2>Controller Output & History</h2>
+
+    <div class="field">
+      <div class="flex-row" style="justify-content: space-between;">
+        <div>
+          <div class="small">Last controller state</div>
+          <div class="flex-row" style="gap: 12px; margin-top: 4px;">
+            <div>
+              <div class="small">blower_u</div>
+              <div id="lbl-u" style="font-weight: 600;">–</div>
+            </div>
+            <div>
+              <div class="small">dt (h)</div>
+              <div id="lbl-dt">–</div>
+            </div>
+            <div>
+              <div class="small">DO_meas / DO_sp</div>
+              <div id="lbl-do">–</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="small">Controller status</div>
+          <span id="lbl-status" class="badge">–</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="small" style="margin-bottom: 4px;">blower_u vs time (last 60 samples)</div>
+      <div class="chart-container">
+        <canvas id="u-chart" width="600" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="small" style="margin-bottom: 4px;">Recent commands</div>
+      <table id="history-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>DO_meas</th>
+            <th>DO_sp</th>
+            <th>u</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <!-- rows will be appended -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="field">
+      <div class="small" style="margin-bottom: 4px;">Last raw response</div>
+      <pre id="raw-res">No requests yet…</pre>
+    </div>
+  </section>
+</main>
+
+<script>
+  const BASE_URL = "http://localhost:8001";
+
+  const elHealthDot = document.getElementById("health-dot");
+  const elHealthText = document.getElementById("health-text");
+  const elPlantId = document.getElementById("plant-id");
+  const elDoMeas = document.getElementById("do-meas");
+  const elDoMeasVal = document.getElementById("do-meas-val");
+  const elDoSp = document.getElementById("do-sp");
+  const elAutoSend = document.getElementById("auto-send");
+  const elBtnSend = document.getElementById("btn-send");
+  const elBtnRand = document.getElementById("btn-rand");
+  const elLblU = document.getElementById("lbl-u");
+  const elLblDt = document.getElementById("lbl-dt");
+  const elLblDo = document.getElementById("lbl-do");
+  const elLblStatus = document.getElementById("lbl-status");
+  const elHistoryBody = document.getElementById("history-body");
+  const elRawRes = document.getElementById("raw-res");
+
+  // Canvas for blower_u chart
+  const canvas = document.getElementById("u-chart");
+  const ctx = canvas.getContext("2d");
+  const U_HISTORY_MAX = 60; // keep last 60 samples
+  const uHistory = [];      // { t: Date, u: number }
+
+  let autoTimer = null;
+
+  function updateDoMeasLabel() {
+    elDoMeasVal.textContent = `(${Number(elDoMeas.value).toFixed(1)} mg/L)`;
+  }
+  updateDoMeasLabel();
+  elDoMeas.addEventListener("input", updateDoMeasLabel);
+
+  // Health check
+  async function checkHealth() {
+    try {
+      const res = await fetch(BASE_URL + "/health");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const txt = await res.text();
+      elHealthDot.classList.remove("bad");
+      elHealthDot.classList.add("ok");
+      elHealthText.textContent = "Online";
+      console.log("Health:", txt);
+    } catch (err) {
+      elHealthDot.classList.remove("ok");
+      elHealthDot.classList.add("bad");
+      elHealthText.textContent = "Offline";
+      console.error("Health check failed:", err);
+    }
+  }
+
+  // Draw blower_u history chart
+  function drawChart() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, w, h);
+
+    // Axes
+    const marginLeft = 40;
+    const marginRight = 10;
+    const marginTop = 10;
+    const marginBottom = 20;
+
+    const plotW = w - marginLeft - marginRight;
+    const plotH = h - marginTop - marginBottom;
+
+    ctx.strokeStyle = "#6b7280";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // y-axis
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, h - marginBottom);
+    // x-axis
+    ctx.moveTo(marginLeft, h - marginBottom);
+    ctx.lineTo(w - marginRight, h - marginBottom);
+    ctx.stroke();
+
+    // Y labels (0..1)
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "10px system-ui";
+    for (let i = 0; i <= 5; i++) {
+      const uVal = i / 5; // 0.0, 0.2, ... 1.0
+      const y = marginTop + (1 - uVal) * plotH;
+      ctx.beginPath();
+      ctx.strokeStyle = "#1f2933";
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(w - marginRight, y);
+      ctx.stroke();
+
+      ctx.fillText(uVal.toFixed(1), 4, y + 3);
+    }
+
+    // No data case
+    if (uHistory.length === 0) {
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillText("No data yet", marginLeft + 10, marginTop + 20);
+      return;
+    }
+
+    // Data: x ~ index in history, y ~ u in [0,1]
+    const n = uHistory.length;
+    ctx.strokeStyle = "#22c55e";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let i = 0; i < n; i++) {
+      const u = uHistory[i].u;
+      const x = marginLeft + (i / Math.max(1, U_HISTORY_MAX - 1)) * plotW;
+      const y = marginTop + (1 - Math.max(0, Math.min(1, u))) * plotH;
+
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // X axis label
+    ctx.fillStyle = "#9ca3af";
+    ctx.fillText("Samples (latest on right)", marginLeft + 10, h - 6);
+  }
+
+  // Send one measurement to /control/do_pi
+  async function sendMeasurement() {
+    const plantId = elPlantId.value.trim() || "CSTP-01";
+    const DO_meas = Number(elDoMeas.value);
+    const DO_sp = Number(elDoSp.value);
+
+    const payload = {
+      plant_id: plantId,
+      timestamp: new Date().toISOString(),
+      measurements: { DO: DO_meas },
+      setpoints: { DO: DO_sp },
+    };
+
+    elBtnSend.disabled = true;
+
+    try {
+      const res = await fetch(BASE_URL + "/control/do_pi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      elRawRes.textContent = text;
+
+      let json = null;
+      try {
+        json = JSON.parse(text);
+      } catch (_) {
+        json = null;
+      }
+
+      if (!res.ok || !json) {
+        elLblStatus.textContent = "Error";
+        elLblStatus.className = "badge bad";
+        console.error("Controller error:", text);
+        return;
+      }
+
+      const u = json.commands?.blower_u ?? null;
+      const dt = json.meta?.dt_ctrl_h ?? null;
+      const status = json.meta?.status ?? "OK";
+
+      elLblU.textContent = u !== null ? u.toFixed(3) : "–";
+      elLblDt.textContent = dt !== null ? dt.toExponential(2) : "–";
+      elLblDo.textContent = `${DO_meas.toFixed(2)} / ${DO_sp.toFixed(2)}`;
+
+      elLblStatus.textContent = status;
+      elLblStatus.className = status === "OK" ? "badge ok" : "badge bad";
+
+      // History table
+      const nowStr = new Date().toLocaleTimeString();
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${nowStr}</td>
+        <td>${DO_meas.toFixed(2)}</td>
+        <td>${DO_sp.toFixed(2)}</td>
+        <td>${u !== null ? u.toFixed(3) : "–"}</td>
+      `;
+      if (elHistoryBody.firstChild) {
+        elHistoryBody.insertBefore(row, elHistoryBody.firstChild);
+      } else {
+        elHistoryBody.appendChild(row);
+      }
+
+      // History for chart
+      if (u !== null && !Number.isNaN(u)) {
+        uHistory.push({ t: new Date(), u: u });
+        if (uHistory.length > U_HISTORY_MAX) {
+          uHistory.splice(0, uHistory.length - U_HISTORY_MAX);
+        }
+        drawChart();
+      }
+
+    } catch (err) {
+      elLblStatus.textContent = "Fetch error";
+      elLblStatus.className = "badge bad";
+      elRawRes.textContent = String(err);
+      console.error("Fetch error:", err);
+    } finally {
+      elBtnSend.disabled = false;
+    }
+  }
+
+  elBtnSend.addEventListener("click", () => {
+    sendMeasurement();
+  });
+
+  elBtnRand.addEventListener("click", () => {
+    const randomDO = Math.random() * 5; // 0–5 mg/L
+    elDoMeas.value = randomDO.toFixed(1);
+    updateDoMeasLabel();
+  });
+
+  elAutoSend.addEventListener("change", () => {
+    if (elAutoSend.checked) {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = setInterval(() => {
+        const base = Number(elDoMeas.value);
+        const noise = (Math.random() - 0.5) * 0.2; // ±0.1
+        let newDO = base + noise;
+        newDO = Math.max(0, Math.min(5, newDO));
+        elDoMeas.value = newDO.toFixed(1);
+        updateDoMeasLabel();
+        sendMeasurement();
+      }, 5000);
+    } else {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  });
+
+  // Initial health check & periodic refresh
+  checkHealth();
+  setInterval(checkHealth, 15000);
+
+  // Initial chart paint (empty)
+  drawChart();
+</script>
+
+</body>
+</html>
