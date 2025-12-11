@@ -81,3 +81,30 @@ body {
   padding: 4px 6px;
   border-bottom: 1px solid #e5e7eb;
 }
+
+/* Health indicator in the topbar */
+/* .health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+} */
+
+/* The small status dot */
+.health .dot {
+  display: inline-block;      /* important: give it box dimensions */
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #9ca3af;       /* gray by default */
+}
+
+/* Colors when JS changes the class on the container */
+.health-ok .dot {
+  background: #10b981;       /* green */
+}
+
+.health-bad .dot {
+  background: #ef4444;       /* red */
+}
+
